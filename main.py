@@ -5,19 +5,24 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.image import Image
 from kivy.clock import Clock
 from kivy.uix.progressbar import ProgressBar
+from kivy.animation import Animation
+
 
 kivy.require('1.11.1')
 
 class CookieClicker(App):
     def __init__(self, **kwargs):
         super(CookieClicker, self).__init__(**kwargs)
-        self.cookie_count = 0  
+        self.cookie_count = 0
+        self.image_scale = 1.0  # Додавання атрибуту image_scale тут
         self.hand_count = 0
         self.granny_count = 0
         self.factory_count = 0
         self.click_count = 0  
         self.baked_cookie_count = 0  
+        self.level = 1  # Ініціалізуємо атрибут рівня
 
+     
     def build(self):
         self.layout = RelativeLayout()
 
@@ -25,10 +30,11 @@ class CookieClicker(App):
         self.layout.add_widget(background)
 
         # Кнопка печива
-        self.cookie_button = Image(source='png-clipart-cookie-clicker-clicker-heroes-incremental-game-cookie-game-baked-goods-thumbnail.png', size_hint=(None, None), size=(300, 300), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        self.cookie_button.bind(on_touch_down=self.on_click)  
+        self.cookie_button = Image(source='png-clipart-cookie-clicker-clicker-heroes-incremental-game-cookie-game-baked-goods-thumbnail.png', 
+                                   size_hint=(None, None), size=(300, 300), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.cookie_button.bind(on_touch_down=self.scale_image)
         self.layout.add_widget(self.cookie_button)
-
+       
         # Лейбли та іконки
         self.cookie_label = Label(text="Cookies: 0", font_size=20, size_hint=(None, None), size=(150, 50), pos_hint={'right': 0.95, 'top': 0.95})
         self.layout.add_widget(self.cookie_label)
@@ -51,7 +57,10 @@ class CookieClicker(App):
         self.level_label = Label(text="Level: 1", font_size=20, size_hint=(None, None), size=(150, 50), pos_hint={'right': 0.95, 'top': 0.6})
         self.layout.add_widget(self.level_label)
 
+        # Modernized level progress bar
         self.level_progress = ProgressBar(max=100, size_hint=(None, None), size=(200, 20), pos_hint={'right': 0.95, 'top': 0.55})
+        self.level_progress.background = 'atlas://data/images/defaulttheme/slider_bg'
+        self.level_progress.foreground = 'atlas://data/images/defaulttheme/slider_fg'
         self.layout.add_widget(self.level_progress)
 
         # Іконки для покупки
@@ -82,6 +91,8 @@ class CookieClicker(App):
 
         return self.layout
 
+
+
     def level_up(self, dt):
         if self.cookie_count >= self.level * 100:
             self.level += 1
@@ -97,12 +108,20 @@ class CookieClicker(App):
                 self.click_count += 1
                 self.counter_label.text = "Clicks: {}".format(self.click_count)
 
-                if self.click_count % 10 == 0:
-                    self.cookie_count += 2
-                    self.cookie_label.text = "Cookies: {}".format(self.cookie_count)
+            if self.click_count % 10 == 0:
+                self.cookie_count += 2
+                self.cookie_label.text = "Cookies: {}".format(self.cookie_count)
 
-                    self.baked_cookie_count += 2
-                    self.baked_cookie_label.text = "Baked Cookies: {}".format(self.baked_cookie_count)
+                self.baked_cookie_count += 2
+                self.baked_cookie_label.text = "Baked Cookies: {}".format(self.baked_cookie_count)
+
+
+    def scale_image(self, instance, touch):
+        if instance.collide_point(*touch.pos):
+            # Створення анімації для збільшення зображення
+            animation = Animation(scale=self.image_scale * 1.2, duration=0.2) + Animation(scale=self.image_scale, duration=0.2)
+            animation.start(instance)
+
 
     def buy_hand(self, instance, touch):
         if touch:
